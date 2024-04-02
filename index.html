@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,22 +10,20 @@
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    min-heightheight: 100vh;
-    margin: 20;
-    flex-direction: column; /* Added flex direction */
+    min-height: 100vh;
+    margin: 20px;
+    flex-direction: column;
   }
   
   .header {
     font-size: 20px;
     font-weight: bold;
     margin-bottom: 20px;
-	margin-top: 20PX;
+    margin-top: 20px;
   }
 
   #taskContainer {
-margin-top: 20px; /* Add some top margin */
-/* Set max height to add scrollbar */
-/* Add vertical scrollbar when content exceeds max height */
+    margin-top: 20px;
   }
 
   .container {
@@ -39,7 +36,7 @@ margin-top: 20px; /* Add some top margin */
   .button {
     width: 100px;
     height: 40px;
-    background-color: orange; /* Changed color */
+    background-color: orange;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -49,7 +46,7 @@ margin-top: 20px; /* Add some top margin */
     text-align: center;
     font-size: 24px;
     font-weight: bold;
-    margin-bottom: 10px; /* Added margin */
+    margin-bottom: 10px;
   }
   
   .working {
@@ -61,137 +58,180 @@ margin-top: 20px; /* Add some top margin */
   }
 
   .add-task-button {
-    width: 40px; /* Adjusted width to make it round */
-    height: 40px; /* Adjusted height to make it round */
-    background-color: orange; /* Same color as paused button */
+    width: 40px;
+    height: 40px;
+    background-color: orange;
     color: white;
     border: none;
-    border-radius: 50%; /* Make it round */
+    border-radius: 50%;
     cursor: pointer;
     font-size: 16px;
-    margin-top: 10px; /* Added margin */
+    margin-top: 10px;
+  }
+
+  .reset-button {
+    width: 100px;
+    height: 40px;
+    background-color: light gray;
+    color: gray;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  .task-input {
+    width: 100%;
+	height: 2em;
+    overflow: auto;
+  font-size: 16px; /* Adjust the font size */
+  resize: both; /* Enable resizing both vertically and horizontally */
+  }
+
+  .cumulative-time {
+    margin-top: 10px;
+    font-weight: bold;
   }
 </style>
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="manifest" href="/site.webmanifest">
-<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
-<meta name="msapplication-TileColor" content="#da532c">
-<meta name="theme-color" content="#ffffff">
-<script>
-window.addEventListener('beforeunload', function (e) {
-    // Cancel the event
-    e.preventDefault();
-    // Chrome requires returnValue to be set
-    e.returnValue = '';
-
-    // Prompt the user with a message
-    var confirmationMessage = 'Are you sure you want to leave this site?';
-    e.returnValue = confirmationMessage;
-    return confirmationMessage;
-});
-</script>
-
 </head>
 <body>
-<div class="header" id="dateHeader">
-</div>
-<div id="taskContainer">
+<div class="header" id="dateHeader"></div>
+<div id="taskContainer"></div>
+<div>
+  <button class="add-task-button" onclick="addTask()">+</button>
 </div>
 <div>
-  <button class="add-task-button" onclick="addTask()">+</button> <!-- Changed text to "+" -->
+  <button class="reset-button" onclick="confirmReset()">Reset</button>
+
 </div>
+<div class="cumulative-time">Total Cumulative Running Time: <span id="cumulativeTime">00:00</span></div>
 
 <script>
-  let timerIntervals = [];
-  let startTimes = [];
-  let elapsedTimes = [];
-  let isTimerRunning = [];
+let timerIntervals = [];
+let startTimes = [];
+let elapsedTimes = [];
+let isTimerRunning = [];
 
-  // Load saved state when the page loads
-  window.onload = function() {
-    if(localStorage.getItem('taskState')) {
-      taskContainer.innerHTML = localStorage.getItem('taskState');
-      const timers = document.querySelectorAll('.timer');
-      timers.forEach((timer, index) => {
-        startTimes[index] = parseInt(timer.dataset.startTime);
-        elapsedTimes[index] = parseInt(timer.dataset.elapsedTime);
-        isTimerRunning[index] = timer.dataset.isRunning === 'true';
-        if(isTimerRunning[index]) {
-          startTimer(index);
-        }
-      });
-    }
-  }
+window.addEventListener('beforeunload', function (e) {
+  e.preventDefault();
+  e.returnValue = '';
 
-  // Display current date in the header
-  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  document.getElementById('dateHeader').textContent = `Tasks recorded ${currentDate}`;
+  var confirmationMessage = 'Are you sure you want to leave this site?';
+  e.returnValue = confirmationMessage;
+  return confirmationMessage;
+});
 
-  function startTimer(row) {
-    startTimes[row] = Date.now() - elapsedTimes[row];
-    timerIntervals[row] = setInterval(() => updateTimer(row), 1000);
-    isTimerRunning[row] = true;
-    saveState();
-  }
-
-  function updateTimer(row) {
-    elapsedTimes[row] = Date.now() - startTimes[row];
-    const minutes = Math.floor(elapsedTimes[row] / 60000);
-    const seconds = Math.floor((elapsedTimes[row] % 60000) / 1000);
-    document.querySelectorAll('.timer')[row].textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    saveState();
-  }
-
-  function toggleTimer(button, row) {
-    const isWorking = button.classList.contains('working');
-    if (isWorking) {
-      clearInterval(timerIntervals[row]);
-      isTimerRunning[row] = false;
-      button.textContent = 'PAUSED';
-      button.classList.remove('working');
-      button.classList.add('paused');
-    } else {
-      if (!isTimerRunning[row]) {
-        startTimer(row);
+window.onload = function() {
+  if(localStorage.getItem('taskState')) {
+    taskContainer.innerHTML = localStorage.getItem('taskState');
+    const timers = document.querySelectorAll('.timer');
+    timers.forEach((timer, index) => {
+      startTimes[index] = parseInt(timer.dataset.startTime);
+      elapsedTimes[index] = parseInt(timer.dataset.elapsedTime);
+      isTimerRunning[index] = timer.dataset.isRunning === 'true';
+      if(isTimerRunning[index]) {
+        startTimer(index);
       }
-      button.textContent = 'WORKING';
-      button.classList.remove('paused');
-      button.classList.add('working');
+    });
+  }
+  updateCumulativeTime(); // Update cumulative time when page loads
+}
+
+const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+document.getElementById('dateHeader').textContent = `Tasks recorded ${currentDate}`;
+
+function startTimer(row) {
+  startTimes[row] = Date.now() - elapsedTimes[row];
+  timerIntervals[row] = setInterval(() => {
+    updateTimer(row);
+    updateCumulativeTime(); // Update cumulative time when timer updates
+  }, 1000);
+  isTimerRunning[row] = true;
+  saveState();
+}
+
+function updateTimer(row) {
+  elapsedTimes[row] = Date.now() - startTimes[row];
+  const minutes = Math.floor(elapsedTimes[row] / 60000);
+  const seconds = Math.floor((elapsedTimes[row] % 60000) / 1000);
+  document.querySelectorAll('.timer')[row].textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  saveState();
+}
+
+function toggleTimer(button, row) {
+  const isWorking = button.classList.contains('working');
+  if (isWorking) {
+    clearInterval(timerIntervals[row]);
+    isTimerRunning[row] = false;
+    button.textContent = 'PAUSED';
+    button.classList.remove('working');
+    button.classList.add('paused');
+  } else {
+    if (!isTimerRunning[row]) {
+      startTimer(row);
     }
+    button.textContent = 'WORKING';
+    button.classList.remove('paused');
+    button.classList.add('working');
   }
+  updateCumulativeTime(); // Update cumulative time after toggling timer
+}
 
-  function addTask() {
-    const taskContainer = document.getElementById('taskContainer');
-    const rowNumber = document.querySelectorAll('.container').length;
-    const newTaskRow = document.createElement('div');
-    newTaskRow.classList.add('container');
-    newTaskRow.innerHTML = `
-      <div>
-        <button class="button paused" onclick="toggleTimer(this, ${rowNumber})">PAUSED</button>
-      </div>
-      <div class="timer" data-start-time="0" data-elapsed-time="0" data-is-running="false">00:00</div>
-      <div>
-        <input type="text" placeholder="Task Name">
-      </div>
-    `;
-    taskContainer.appendChild(newTaskRow);
-
-    // Initialize timer variables for the new row
-    timerIntervals.push(null);
-    startTimes.push(0);
-    elapsedTimes.push(0);
-    isTimerRunning.push(false);
-
-    saveState();
+function confirmReset() {
+  if (confirm("Are you sure you want to reset?")) {
+    resetTasks(); // Call resetTasks() if the user confirms
   }
+}
 
-  // Save state function
-  function saveState() {
-    const taskState = taskContainer.innerHTML;
-    localStorage.setItem('taskState', taskState);
-  }
+function addTask() {
+  const taskContainer = document.getElementById('taskContainer');
+  const rowNumber = document.querySelectorAll('.container').length;
+  const newTaskRow = document.createElement('div');
+  newTaskRow.classList.add('container');
+  newTaskRow.innerHTML = `
+    <div>
+      <button class="button paused" onclick="toggleTimer(this, ${rowNumber})">PAUSED</button>
+    </div>
+    <div class="timer" data-start-time="0" data-elapsed-time="0" data-is-running="false">00:00</div>
+    <div>
+      <textarea class="task-input" placeholder="Task Name"></textarea>
+    </div>
+  `;
+  taskContainer.appendChild(newTaskRow);
+
+  // Initialize timer variables for the new row
+  timerIntervals.push(null);
+  startTimes.push(0);
+  elapsedTimes.push(0);
+  isTimerRunning.push(false);
+
+  saveState();
+  updateCumulativeTime(); // Update cumulative time after adding a task
+}
+
+function resetTasks() {
+  document.getElementById('taskContainer').innerHTML = '';
+  timerIntervals.forEach(clearInterval); // Clear all intervals
+  timerIntervals = [];
+  startTimes = [];
+  elapsedTimes = [];
+  isTimerRunning = [];
+  localStorage.removeItem('taskState');
+  updateCumulativeTime(); // Update cumulative time after resetting tasks
+}
+
+function updateCumulativeTime() {
+  let totalMilliseconds = elapsedTimes.reduce((total, time) => total + time, 0);
+  const totalMinutes = Math.floor(totalMilliseconds / 60000);
+  const totalSeconds = Math.floor((totalMilliseconds % 60000) / 1000);
+  document.getElementById('cumulativeTime').textContent = `${totalMinutes.toString().padStart(2, '0')}:${totalSeconds.toString().padStart(2, '0')}`;
+}
+
+function saveState() {
+  const taskState = taskContainer.innerHTML;
+  localStorage.setItem('taskState', taskState);
+}
+
 </script>
 </body>
 </html>
