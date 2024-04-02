@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Tracker</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    min-heightheight: 100vh;
+    margin: 20;
+    flex-direction: column; /* Added flex direction */
+  }
+  
+  .header {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
+	margin-top: 20PX;
+  }
+
+  #taskContainer {
+margin-top: 20px; /* Add some top margin */
+/* Set max height to add scrollbar */
+/* Add vertical scrollbar when content exceeds max height */
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .button {
+    width: 100px;
+    height: 40px;
+    background-color: orange; /* Changed color */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .timer {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px; /* Added margin */
+  }
+  
+  .working {
+    background-color: green;
+  }
+  
+  .paused {
+    background-color: orange;
+  }
+
+  .add-task-button {
+    width: 40px; /* Adjusted width to make it round */
+    height: 40px; /* Adjusted height to make it round */
+    background-color: orange; /* Same color as paused button */
+    color: white;
+    border: none;
+    border-radius: 50%; /* Make it round */
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px; /* Added margin */
+  }
+</style>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="msapplication-TileColor" content="#da532c">
+<meta name="theme-color" content="#ffffff">
+<script>
+window.addEventListener('beforeunload', function (e) {
+    // Cancel the event
+    e.preventDefault();
+    // Chrome requires returnValue to be set
+    e.returnValue = '';
+
+    // Prompt the user with a message
+    var confirmationMessage = 'Are you sure you want to leave this site?';
+    e.returnValue = confirmationMessage;
+    return confirmationMessage;
+});
+</script>
+
+</head>
+<body>
+<div class="header" id="dateHeader">
+</div>
+<div id="taskContainer">
+</div>
+<div>
+  <button class="add-task-button" onclick="addTask()">+</button> <!-- Changed text to "+" -->
+</div>
+
+<script>
+  let timerIntervals = [];
+  let startTimes = [];
+  let elapsedTimes = [];
+  let isTimerRunning = [];
+
+  // Load saved state when the page loads
+  window.onload = function() {
+    if(localStorage.getItem('taskState')) {
+      taskContainer.innerHTML = localStorage.getItem('taskState');
+      const timers = document.querySelectorAll('.timer');
+      timers.forEach((timer, index) => {
+        startTimes[index] = parseInt(timer.dataset.startTime);
+        elapsedTimes[index] = parseInt(timer.dataset.elapsedTime);
+        isTimerRunning[index] = timer.dataset.isRunning === 'true';
+        if(isTimerRunning[index]) {
+          startTimer(index);
+        }
+      });
+    }
+  }
+
+  // Display current date in the header
+  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('dateHeader').textContent = `Tasks recorded ${currentDate}`;
+
+  function startTimer(row) {
+    startTimes[row] = Date.now() - elapsedTimes[row];
+    timerIntervals[row] = setInterval(() => updateTimer(row), 1000);
+    isTimerRunning[row] = true;
+    saveState();
+  }
+
+  function updateTimer(row) {
+    elapsedTimes[row] = Date.now() - startTimes[row];
+    const minutes = Math.floor(elapsedTimes[row] / 60000);
+    const seconds = Math.floor((elapsedTimes[row] % 60000) / 1000);
+    document.querySelectorAll('.timer')[row].textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    saveState();
+  }
+
+  function toggleTimer(button, row) {
+    const isWorking = button.classList.contains('working');
+    if (isWorking) {
+      clearInterval(timerIntervals[row]);
+      isTimerRunning[row] = false;
+      button.textContent = 'PAUSED';
+      button.classList.remove('working');
+      button.classList.add('paused');
+    } else {
+      if (!isTimerRunning[row]) {
+        startTimer(row);
+      }
+      button.textContent = 'WORKING';
+      button.classList.remove('paused');
+      button.classList.add('working');
+    }
+  }
+
+  function addTask() {
+    const taskContainer = document.getElementById('taskContainer');
+    const rowNumber = document.querySelectorAll('.container').length;
+    const newTaskRow = document.createElement('div');
+    newTaskRow.classList.add('container');
+    newTaskRow.innerHTML = `
+      <div>
+        <button class="button paused" onclick="toggleTimer(this, ${rowNumber})">PAUSED</button>
+      </div>
+      <div class="timer" data-start-time="0" data-elapsed-time="0" data-is-running="false">00:00</div>
+      <div>
+        <input type="text" placeholder="Task Name">
+      </div>
+    `;
+    taskContainer.appendChild(newTaskRow);
+
+    // Initialize timer variables for the new row
+    timerIntervals.push(null);
+    startTimes.push(0);
+    elapsedTimes.push(0);
+    isTimerRunning.push(false);
+
+    saveState();
+  }
+
+  // Save state function
+  function saveState() {
+    const taskState = taskContainer.innerHTML;
+    localStorage.setItem('taskState', taskState);
+  }
+</script>
+</body>
+</html>
