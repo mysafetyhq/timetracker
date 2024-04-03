@@ -105,6 +105,8 @@
 
 </div>
 <div class="cumulative-time">Total Cumulative Running Time: <span id="cumulativeTime">00:00</span></div>
+<div class="cumulative-time">Total Cumulative Running Time (Hours:Minutes): <span id="cumulativeTimeHoursMinutes">00:00</span></div>
+<div class="cumulative-time">Cumulative Time in Percentage of Work Day: <span id="cumulativeTimePercentage">0%</span></div>
 
 <script>
 let timerIntervals = [];
@@ -225,6 +227,13 @@ function updateCumulativeTime() {
   const totalMinutes = Math.floor(totalMilliseconds / 60000);
   const totalSeconds = Math.floor((totalMilliseconds % 60000) / 1000);
   document.getElementById('cumulativeTime').textContent = `${totalMinutes.toString().padStart(2, '0')}:${totalSeconds.toString().padStart(2, '0')}`;
+
+  const totalHours = Math.floor(totalMinutes / 60);
+  const remainingMinutes = totalMinutes % 60;
+  document.getElementById('cumulativeTimeHoursMinutes').textContent = `${totalHours.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}`;
+
+  const percentageOfWorkDay = ((totalMilliseconds / (8 * 60 * 60 * 1000)) * 100).toFixed(2); // Assuming 8 hours workday
+  document.getElementById('cumulativeTimePercentage').textContent = `${percentageOfWorkDay}%`;
 }
 
 function saveState() {
