@@ -82,15 +82,34 @@
 
   .task-input {
     width: 100%;
-	height: 2em;
+    height: 2em;
     overflow: auto;
-  font-size: 16px; /* Adjust the font size */
-  resize: both; /* Enable resizing both vertically and horizontally */
+    font-size: 16px;
+    resize: both;
   }
 
   .cumulative-time {
     margin-top: 10px;
     font-weight: bold;
+  }
+
+  .progress-bar-container {
+    width: 100%;
+    height: 20px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background-color: green;
+    transition: width 0.5s ease;
+  }
+
+  .progress-bar.red {
+    background-color: red;
   }
 </style>
 </head>
@@ -102,11 +121,13 @@
 </div>
 <div>
   <button class="reset-button" onclick="confirmReset()">Reset</button>
-
 </div>
 <div class="cumulative-time">Total Cumulative Running Time: <span id="cumulativeTime">00:00</span></div>
 <div class="cumulative-time">Total Cumulative Running Time (Hours:Minutes): <span id="cumulativeTimeHoursMinutes">00:00</span></div>
 <div class="cumulative-time">Cumulative Time in Percentage of Work Day: <span id="cumulativeTimePercentage">0%</span></div>
+<div class="progress-bar-container">
+  <div class="progress-bar" style="width: 0;"></div>
+</div>
 
 <script>
 let timerIntervals = [];
@@ -147,6 +168,7 @@ function startTimer(row) {
   timerIntervals[row] = setInterval(() => {
     updateTimer(row);
     updateCumulativeTime(); // Update cumulative time when timer updates
+    updateProgressBar();
   }, 1000);
   isTimerRunning[row] = true;
   saveState();
@@ -177,6 +199,7 @@ function toggleTimer(button, row) {
     button.classList.add('working');
   }
   updateCumulativeTime(); // Update cumulative time after toggling timer
+  updateProgressBar();
 }
 
 function confirmReset() {
@@ -208,8 +231,8 @@ function addTask() {
   isTimerRunning.push(false);
 
   saveState();
-  updateCumulativeTime(); // Update cumulative time after adding a task
 }
+
 
 function resetTasks() {
   document.getElementById('taskContainer').innerHTML = '';
@@ -220,6 +243,7 @@ function resetTasks() {
   isTimerRunning = [];
   localStorage.removeItem('taskState');
   updateCumulativeTime(); // Update cumulative time after resetting tasks
+  updateProgressBar();
 }
 
 function updateCumulativeTime() {
@@ -236,6 +260,18 @@ function updateCumulativeTime() {
   document.getElementById('cumulativeTimePercentage').textContent = `${percentageOfWorkDay}%`;
 }
 
+function updateProgressBar() {
+  const percentageOfWorkDay = parseFloat(document.getElementById('cumulativeTimePercentage').textContent);
+  const progressBar = document.querySelector('.progress-bar');
+  if (percentageOfWorkDay > 100) {
+    progressBar.style.width = '100%';
+    progressBar.classList.add('red');
+  } else {
+    progressBar.style.width = `${percentageOfWorkDay}%`;
+    progressBar.classList.remove('red');
+  }
+}
+
 function saveState() {
   const taskState = taskContainer.innerHTML;
   localStorage.setItem('taskState', taskState);
@@ -244,3 +280,4 @@ function saveState() {
 </script>
 </body>
 </html>
+
