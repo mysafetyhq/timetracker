@@ -257,7 +257,6 @@ function addTask() {
   saveState();
 }
 
-
 function resetTasks() {
   document.getElementById('taskContainer').innerHTML = '';
   timerIntervals.forEach(clearInterval); // Clear all intervals
@@ -302,6 +301,7 @@ function saveState() {
 }
 
 function generatePDF() {
+  const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
   // Add header
