@@ -257,6 +257,7 @@ function addTask() {
   saveState();
 }
 
+
 function resetTasks() {
   document.getElementById('taskContainer').innerHTML = '';
   timerIntervals.forEach(clearInterval); // Clear all intervals
@@ -307,7 +308,7 @@ function generatePDF() {
   // Add header
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   doc.setFontSize(20);
-  doc.setFontStyle('bold');
+  doc.setFont('helvetica', 'bold');
   doc.text(`Tasks Tracked ${currentDate}`, 14, 20);
 
   // Add task list
@@ -319,7 +320,7 @@ function generatePDF() {
     const timerText = timer.textContent;
 
     doc.setFontSize(14);
-    doc.setFontStyle('normal');
+    doc.setFont('helvetica', 'normal');
     doc.text(`Task: ${taskName}`, 14, y);
     doc.text(`Time Spent: ${timerText}`, 14, y + 10);
 
@@ -333,7 +334,7 @@ function generatePDF() {
 
   y += 20; // Space before cumulative time
   doc.setFontSize(14);
-  doc.setFontStyle('bold');
+  doc.setFont('helvetica', 'bold');
   doc.text(`Total Cumulative Running Time: ${cumulativeTime}`, 14, y);
   y += 10;
   doc.text(`Total Cumulative Running Time (Hours:Minutes): ${cumulativeTimeHoursMinutes}`, 14, y);
@@ -343,7 +344,6 @@ function generatePDF() {
   // Save PDF
   doc.save('time_tracker_report.pdf');
 }
-
 </script>
 </body>
 </html>
