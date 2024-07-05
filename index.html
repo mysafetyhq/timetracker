@@ -13,6 +13,7 @@
     min-height: 100vh;
     margin: 20px;
     flex-direction: column;
+    position: relative; /* Ensure relative positioning for the capture button */
   }
   
   .header {
@@ -112,6 +113,22 @@
   .progress-bar.red {
     background-color: red;
   }
+
+  /* New CSS for capture button */
+  .capture-button {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 40px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+  }
 </style>
 </head>
 <body>
@@ -129,6 +146,9 @@
 <div class="progress-bar-container">
   <div class="progress-bar" style="width: 0;"></div>
 </div>
+
+<!-- Capture button for image and timestamp -->
+<button class="capture-button" onclick="captureAndTimestamp()">Capture & Timestamp</button>
 
 <script>
 let timerIntervals = [];
@@ -278,7 +298,37 @@ function saveState() {
   localStorage.setItem('taskState', taskState);
 }
 
+function captureAndTimestamp() {
+  const body = document.body;
+  const captureButton = document.querySelector('.capture-button');
+  
+  // Create a canvas element
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  // Set canvas dimensions to match the body
+  canvas.width = body.offsetWidth;
+  canvas.height = body.offsetHeight;
+
+  // Draw contents of the body onto the canvas
+  ctx.drawWindow(window, 0, 0, body.offsetWidth, body.offsetHeight, "rgb(255,255,255)");
+
+  // Add timestamp
+  const now = new Date();
+  const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+  ctx.font = "16px Arial";
+  ctx.fillStyle = "black";
+  ctx.textAlign = "center";
+  ctx.fillText(timestamp, canvas.width / 2, canvas.height - 20);
+
+  // Convert canvas to image data URL
+  const imageDataUrl = canvas.toDataURL();
+
+  // Open image in new tab
+  const imageWindow = window.open();
+  imageWindow.document.write(`<img src="${imageDataUrl}" style="display: block; margin: 0 auto;">`);
+}
+
 </script>
 </body>
 </html>
-
