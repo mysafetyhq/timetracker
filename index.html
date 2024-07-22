@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Time Tracker</title>
+<title>SHQ Time Tracker II</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -146,9 +146,6 @@
 <div class="progress-bar-container">
   <div class="progress-bar" style="width: 0;"></div>
 </div>
-
-<!-- Capture button for PDF -->
-<button class="capture-button" onclick="generatePDF()">Generate PDF</button>
 
 <!-- Include jsPDF library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
@@ -301,49 +298,6 @@ function saveState() {
   localStorage.setItem('taskState', taskState);
 }
 
-function generatePDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  // Add header
-  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  doc.setFontSize(20);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Tasks Tracked ${currentDate}`, 14, 20);
-
-  // Add task list
-  let y = 40; // Initial y position
-  const taskRows = document.querySelectorAll('.container');
-  taskRows.forEach(row => {
-    const timer = row.querySelector('.timer');
-    const taskName = row.querySelector('.task-input').value;
-    const timerText = timer.textContent;
-
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Task: ${taskName}`, 14, y);
-    doc.text(`Time Spent: ${timerText}`, 14, y + 10);
-
-    y += 20; // Increment y position for next task
-  });
-
-  // Add cumulative time
-  const cumulativeTime = document.getElementById('cumulativeTime').textContent;
-  const cumulativeTimeHoursMinutes = document.getElementById('cumulativeTimeHoursMinutes').textContent;
-  const cumulativeTimePercentage = document.getElementById('cumulativeTimePercentage').textContent;
-
-  y += 20; // Space before cumulative time
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Total Cumulative Running Time: ${cumulativeTime}`, 14, y);
-  y += 10;
-  doc.text(`Total Cumulative Running Time (Hours:Minutes): ${cumulativeTimeHoursMinutes}`, 14, y);
-  y += 10;
-  doc.text(`Cumulative Time in Percentage of Work Day: ${cumulativeTimePercentage}`, 14, y);
-
-  // Save PDF
-  doc.save('time_tracker_report.pdf');
-}
 </script>
 </body>
 </html>
